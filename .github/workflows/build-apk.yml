@@ -48,11 +48,11 @@ jobs:
 
       - name: نمایش SHA-1 fingerprint (برای تنظیم Google OAuth)
         run: |
-          keytool -list -v \
-            -keystore ~/.android/debug.keystore \
-            -alias androiddebugkey \
-            -storepass android \
-            -keypass android | grep "SHA1:"
+          echo "=== مسیر فایل keystore ==="
+          find / -name "debug.keystore" 2>/dev/null
+          echo "=== محتوای کامل keytool ==="
+          KEYSTORE_PATH=$(find / -name "debug.keystore" 2>/dev/null | head -n 1)
+          keytool -list -v -keystore "$KEYSTORE_PATH" -alias androiddebugkey -storepass android -keypass android || true
 
       - name: بارگذاری فایل APK به عنوان خروجی
         uses: actions/upload-artifact@v4
