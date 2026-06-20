@@ -3,7 +3,7 @@
 const Auth = (() => {
 
   // ⚠️ این مقدار را با Client ID که از Google Cloud Console گرفتید جایگزین کنید
-  const CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID_HERE.apps.googleusercontent.com';
+  const CLIENT_ID = '171444408122-3ov9197blrtdt2jpqma4lg0kp7r3chhh.apps.googleusercontent.com';
 
   // دسترسی‌هایی که از کاربر می‌خواهیم:
   // - drive.file: فقط به فایل‌هایی که خودِ این اپ می‌سازد دسترسی دارد (امن‌ترین حالت)
