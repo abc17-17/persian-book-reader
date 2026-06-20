@@ -1,0 +1,8 @@
+{
+  "appId": "ir.bookreader.app",
+  "appName": "کتابخوان من",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": true
+  }
+}
