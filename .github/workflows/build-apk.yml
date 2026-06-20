@@ -35,10 +35,18 @@ jobs:
             npx cap add android
           fi
 
-      - name: همگام‌سازی فایل‌های وب با پروژه اندروید
+      - name: رجیستر کردن پلاگین GoogleAuth در MainActivity
         run: |
-          npx cap copy
-          npx cap update android
+          MAIN_ACTIVITY=$(find android -name "MainActivity.java")
+          echo "مسیر پیدا شده: $MAIN_ACTIVITY"
+          if ! grep -q "GoogleAuth" "$MAIN_ACTIVITY"; then
+            sed -i '/import com.getcapacitor.BridgeActivity;/a import com.codetrixstudio.capacitor.GoogleAuth.GoogleAuth;' "$MAIN_ACTIVITY"
+            sed -i '/public class MainActivity extends BridgeActivity {/a \\n    @Override\n    public void onCreate(android.os.Bundle savedInstanceState) {\n        registerPlugin(GoogleAuth.class);\n        super.onCreate(savedInstanceState);\n    }' "$MAIN_ACTIVITY"
+          fi
+          cat "$MAIN_ACTIVITY"
+
+      - name: همگام‌سازی فایل‌های وب و پلاگین‌ها با پروژه اندروید
+        run: npx cap sync android
 
       - name: مجوز اجرا به gradlew
         run: chmod +x ./android/gradlew
@@ -57,7 +65,7 @@ jobs:
           keytool -list -v -keystore "$KEYSTORE_PATH" -alias androiddebugkey -storepass android -keypass android
           echo "=== پایان ==="
           exit 0
-          
+
       - name: بارگذاری فایل APK به عنوان خروجی
         uses: actions/upload-artifact@v4
         with:
