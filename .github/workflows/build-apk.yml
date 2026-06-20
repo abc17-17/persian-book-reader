@@ -1,0 +1,53 @@
+name: ساخت فایل APK
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: {}
+
+jobs:
+  build-apk:
+    name: Build APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: دریافت کد از مخزن
+        uses: actions/checkout@v4
+
+      - name: نصب Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: نصب Java (برای Gradle)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: نصب پکیج‌های پروژه
+        run: npm install
+
+      - name: افزودن پلتفرم اندروید به Capacitor (در صورت نبود)
+        run: |
+          if [ ! -d "android" ]; then
+            npx cap add android
+          fi
+
+      - name: همگام‌سازی فایل‌های وب با پروژه اندروید
+        run: |
+          npx cap copy
+          npx cap update android
+
+      - name: مجوز اجرا به gradlew
+        run: chmod +x ./android/gradlew
+
+      - name: ساخت APK (نسخه دیباگ)
+        run: cd android && ./gradlew assembleDebug
+
+      - name: بارگذاری فایل APK به عنوان خروجی
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
