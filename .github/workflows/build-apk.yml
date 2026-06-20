@@ -47,13 +47,17 @@ jobs:
         run: cd android && ./gradlew assembleDebug
 
       - name: نمایش SHA-1 fingerprint (برای تنظیم Google OAuth)
+        shell: bash --noprofile --norc -o pipefail {0}
         run: |
+          set +e
           echo "=== مسیر فایل keystore ==="
-          find / -name "debug.keystore" 2>/dev/null
+          KEYSTORE_PATH="/home/runner/.config/.android/debug.keystore"
+          echo "$KEYSTORE_PATH"
           echo "=== محتوای کامل keytool ==="
-          KEYSTORE_PATH=$(find / -name "debug.keystore" 2>/dev/null | head -n 1)
-          keytool -list -v -keystore "$KEYSTORE_PATH" -alias androiddebugkey -storepass android -keypass android || true
-
+          keytool -list -v -keystore "$KEYSTORE_PATH" -alias androiddebugkey -storepass android -keypass android
+          echo "=== پایان ==="
+          exit 0
+          
       - name: بارگذاری فایل APK به عنوان خروجی
         uses: actions/upload-artifact@v4
         with:
