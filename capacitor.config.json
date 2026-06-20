@@ -4,5 +4,12 @@
   "webDir": "www",
   "android": {
     "allowMixedContent": true
+  },
+  "plugins": {
+    "GoogleAuth": {
+      "scopes": ["email", "profile", "https://www.googleapis.com/auth/drive.file"],
+      "serverClientId": "اینجا Client ID نوع Web را بگذار.apps.googleusercontent.com",
+      "forceCodeForRefreshToken": true
+    }
   }
 }
