@@ -75,7 +75,7 @@ jobs:
         run: |
           cd android
           ./gradlew assembleDebug \
-            -Pandroid.injected.signing.store.file=release.keystore \
+            -Pandroid.injected.signing.store.file="$(pwd)/app/release.keystore" \
             -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
             -Pandroid.injected.signing.key.alias="$KEYSTORE_ALIAS" \
             -Pandroid.injected.signing.key.password="$KEYSTORE_PASSWORD"
