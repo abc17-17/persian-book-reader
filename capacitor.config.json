@@ -8,7 +8,7 @@
   "plugins": {
     "GoogleAuth": {
       "scopes": ["email", "profile", "https://www.googleapis.com/auth/drive.file"],
-      "serverClientId": "اینجا Client ID نوع Web را بگذار.apps.googleusercontent.com",
+      "serverClientId": "171444408122-3ov9197blrtdt2jpqma4lg0kp7r3chhh.apps.googleusercontent.com",
       "forceCodeForRefreshToken": true
     }
   }
