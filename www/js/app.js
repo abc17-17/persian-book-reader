@@ -5,6 +5,16 @@ function showScreen(screenId) {
   document.getElementById(screenId).classList.add('active');
 }
 
+// نمایش خطاهای ناگهانی به جای کرش بی‌صدای اپ (مفید برای عیب‌یابی روی گوشی)
+window.addEventListener('error', (event) => {
+  alert('خطا: ' + (event.message || 'یک خطای ناشناخته رخ داد'));
+});
+window.addEventListener('unhandledrejection', (event) => {
+  const reason = event.reason;
+  const msg = (reason && reason.message) ? reason.message : String(reason);
+  alert('خطا: ' + msg);
+});
+
 document.addEventListener('DOMContentLoaded', async () => {
   // بررسی اینکه قبلاً کاربر وارد شده یا نه
   const isLoggedIn = await Auth.isLoggedIn();
