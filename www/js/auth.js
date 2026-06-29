@@ -18,7 +18,19 @@ const Auth = (() => {
 
   // ===== ورود از طریق پلاگین native (داخل APK) =====
   async function loginNative() {
+    if (!window.Capacitor || !window.Capacitor.Plugins || !window.Capacitor.Plugins.GoogleAuth) {
+      throw new Error('پلاگین GoogleAuth در دسترس نیست (احتمالاً رجیستر نشده است)');
+    }
+
     const { GoogleAuth } = window.Capacitor.Plugins;
+    const WEB_CLIENT_ID = 'YOUR_WEB_CLIENT_ID_HERE.apps.googleusercontent.com';
+
+    // مقداردهی صریح پلاگین — اگر این مرحله شکست بخورد، باید بفهمیم، نه که نادیده بگیریم
+    await GoogleAuth.initialize({
+      clientId: WEB_CLIENT_ID,
+      scopes: ['email', 'profile', 'https://www.googleapis.com/auth/drive.file'],
+      grantOfflineAccess: true
+    });
 
     const user = await GoogleAuth.signIn();
     accessToken = user.authentication.accessToken;
