@@ -45,12 +45,38 @@ jobs:
 
           import com.getcapacitor.BridgeActivity;
           import com.codetrixstudio.capacitor.GoogleAuth.GoogleAuth;
+          import android.os.Bundle;
+          import android.util.Log;
+          import android.app.AlertDialog;
 
           public class MainActivity extends BridgeActivity {
               @Override
-              public void onCreate(android.os.Bundle savedInstanceState) {
+              public void onCreate(Bundle savedInstanceState) {
                   registerPlugin(GoogleAuth.class);
                   super.onCreate(savedInstanceState);
+
+                  final Thread.UncaughtExceptionHandler defaultHandler = Thread.getDefaultUncaughtExceptionHandler();
+                  Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+                      @Override
+                      public void uncaughtException(Thread thread, final Throwable ex) {
+                          Log.e("AppCrash", "Uncaught exception", ex);
+                          final String message = android.util.Log.getStackTraceString(ex);
+                          runOnUiThread(new Runnable() {
+                              @Override
+                              public void run() {
+                                  try {
+                                      new AlertDialog.Builder(MainActivity.this)
+                                          .setTitle("خطای برنامه")
+                                          .setMessage(message)
+                                          .setPositiveButton("باشه", null)
+                                          .show();
+                                  } catch (Exception e) {
+                                      // اگر نمایش دیالوگ هم شکست خورد، حداقل لاگ ثبت شده است
+                                  }
+                              }
+                          });
+                      }
+                  });
               }
           }
           JAVAEOF
