@@ -23,7 +23,7 @@ const Auth = (() => {
     }
 
     const { GoogleAuth } = window.Capacitor.Plugins;
-    const WEB_CLIENT_ID = 'YOUR_WEB_CLIENT_ID_HERE.apps.googleusercontent.com';
+    const WEB_CLIENT_ID = '171444408122-3ov9197blrtdt2jpqma4lg0kp7r3chhh.apps.googleusercontent.com';
 
     // مقداردهی صریح پلاگین — اگر این مرحله شکست بخورد، باید بفهمیم، نه که نادیده بگیریم
     await GoogleAuth.initialize({
