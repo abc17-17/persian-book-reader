@@ -1,0 +1,111 @@
+name: ساخت فایل APK
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: {}
+
+jobs:
+  build-apk:
+    name: Build APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: دریافت کد از مخزن
+        uses: actions/checkout@v4
+
+      - name: نصب Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: نصب Java (برای Gradle)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: نصب پکیج‌های پروژه
+        run: npm install
+
+      - name: افزودن پلتفرم اندروید به Capacitor (در صورت نبود)
+        run: |
+          if [ ! -d "android" ]; then
+            npx cap add android
+          fi
+
+      - name: رجیستر کردن پلاگین GoogleAuth در MainActivity
+        run: |
+          MAIN_ACTIVITY=$(find android -name "MainActivity.java")
+          echo "مسیر پیدا شده: $MAIN_ACTIVITY"
+          PACKAGE_LINE=$(grep "^package " "$MAIN_ACTIVITY")
+          cat > "$MAIN_ACTIVITY" << JAVAEOF
+          $PACKAGE_LINE
+
+          import com.getcapacitor.BridgeActivity;
+          import com.codetrixstudio.capacitor.GoogleAuth.GoogleAuth;
+          import android.os.Bundle;
+          import android.util.Log;
+          import android.app.AlertDialog;
+
+          public class MainActivity extends BridgeActivity {
+              @Override
+              public void onCreate(Bundle savedInstanceState) {
+                  registerPlugin(GoogleAuth.class);
+                  super.onCreate(savedInstanceState);
+
+                  final Thread.UncaughtExceptionHandler defaultHandler = Thread.getDefaultUncaughtExceptionHandler();
+                  Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+                      @Override
+                      public void uncaughtException(Thread thread, final Throwable ex) {
+                          Log.e("AppCrash", "Uncaught exception", ex);
+                          final String message = android.util.Log.getStackTraceString(ex);
+                          runOnUiThread(new Runnable() {
+                              @Override
+                              public void run() {
+                                  try {
+                                      new AlertDialog.Builder(MainActivity.this)
+                                          .setTitle("خطای برنامه")
+                                          .setMessage(message)
+                                          .setPositiveButton("باشه", null)
+                                          .show();
+                                  } catch (Exception e) {}
+                              }
+                          });
+                      }
+                  });
+              }
+          }
+          JAVAEOF
+          cat "$MAIN_ACTIVITY"
+
+      - name: همگام‌سازی فایل‌های وب و پلاگین‌ها با پروژه اندروید
+        run: npx cap sync android
+
+      - name: مجوز اجرا به gradlew
+        run: chmod +x ./android/gradlew
+
+      - name: بازسازی keystore ثابت از GitHub Secret
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > android/app/release.keystore
+
+      - name: ساخت APK با امضای ثابت
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEYSTORE_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
+        run: |
+          cd android
+          ./gradlew assembleDebug \
+            -Pandroid.injected.signing.store.file="$(pwd)/app/release.keystore" \
+            -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
+            -Pandroid.injected.signing.key.alias="$KEYSTORE_ALIAS" \
+            -Pandroid.injected.signing.key.password="$KEYSTORE_PASSWORD"
+
+      - name: بارگذاری فایل APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
