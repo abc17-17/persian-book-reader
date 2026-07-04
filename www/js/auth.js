@@ -15,7 +15,7 @@ const Auth = (() => {
       throw new Error('پلاگین GoogleAuth در دسترس نیست');
     }
     const { GoogleAuth } = window.Capacitor.Plugins;
-    const WEB_CLIENT_ID = 'YOUR_WEB_CLIENT_ID_HERE.apps.googleusercontent.com';
+    const WEB_CLIENT_ID = '171444408122-3ov9197blrtdt2jpqma4lg0kp7r3chhh.apps.googleusercontent.com';
     await GoogleAuth.initialize({ clientId: WEB_CLIENT_ID, scopes: ['email', 'profile', 'https://www.googleapis.com/auth/drive.file'], grantOfflineAccess: true });
     const user = await GoogleAuth.signIn();
     accessToken = user.authentication.accessToken;
@@ -28,7 +28,7 @@ const Auth = (() => {
   }
 
   async function loginWeb() {
-    const CLIENT_ID = 'YOUR_WEB_CLIENT_ID_HERE.apps.googleusercontent.com';
+    const CLIENT_ID = '171444408122-3ov9197blrtdt2jpqma4lg0kp7r3chhh.apps.googleusercontent.com';
     await loadGisScript();
     return new Promise((resolve, reject) => {
       const tokenClient = google.accounts.oauth2.initTokenClient({
