@@ -44,9 +44,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     Library.render();
   });
 
-  document.getElementById('btn-prev-page').addEventListener('click', () => Reader.prevPage());
-  document.getElementById('btn-next-page').addEventListener('click', () => Reader.nextPage());
-
   document.getElementById('btn-account').addEventListener('click', async () => {
     if (confirm('خروج از حساب کاربری؟')) {
       await Auth.logout();
