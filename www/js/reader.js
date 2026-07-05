@@ -58,13 +58,13 @@ const Reader = (() => {
     totalColumns = Math.max(1, Math.round(content.scrollWidth / pageWidth));
   }
 
-  // ===== scroll snap: وقتی کاربر دستی اسکرول کرد، به نزدیک‌ترین صفحه snap کن =====
+  // اصلاح تابع اسکرول دستی (اضافه شدن Math.abs برای نادیده گرفتن منفی بودن scrollLeft)
   function onSnapScroll() {
     clearTimeout(window._snapTimer);
     window._snapTimer = setTimeout(() => {
       const content = document.getElementById('reader-content');
       const pageWidth = window.innerWidth;
-      const nearest = Math.round(content.scrollLeft / pageWidth);
+      const nearest = Math.round(Math.abs(content.scrollLeft) / pageWidth);
       currentColumn = Math.max(0, Math.min(nearest, totalColumns - 1));
       updateIndicator();
       saveProgress();
@@ -84,9 +84,10 @@ const Reader = (() => {
     goToColumn(currentColumn);
   }
 
+  // اصلاح تابع پرش صفحه (اضافه شدن علامت منفی برای RTL)
   function goToColumn(col) {
     const content = document.getElementById('reader-content');
-    content.scrollTo({ left: col * window.innerWidth, behavior: 'smooth' });
+    content.scrollTo({ left: -(col * window.innerWidth), behavior: 'smooth' });
     updateIndicator();
     saveProgress();
   }
