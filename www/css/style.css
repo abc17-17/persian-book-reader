@@ -84,7 +84,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   height: calc(100vh - 96px);
   width: 100vw;
 
-  padding: 20px 24px 28px;
+  padding: 50px 24px 28px;
   box-sizing: border-box;
 
   /* عرض ستون = عرض صفحه منهای padding چپ و راست */
