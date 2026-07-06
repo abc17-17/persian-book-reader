@@ -108,8 +108,9 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 /* جلوگیری از شکستن پاراگراف‌ها بین صفحات */
 .reader-content p {
   margin-bottom: 1em;
-  break-inside: avoid;
-  -webkit-column-break-inside: avoid;
+  /* دو خط بعدی برای دیباگ موقتا غیرفعال شدن */
+  /* break-inside: avoid; */
+  /* -webkit-column-break-inside: avoid; */
 }
 
 .reader-content h1 {
