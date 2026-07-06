@@ -25,7 +25,18 @@ const Reader = (() => {
     applySettings();
 
     const content = document.getElementById('reader-content');
-    content.innerHTML = book.content || '';
+
+let finalHTML = '';
+// بررسی می‌کنیم که آیا محتوا به شکل آرایه (JSON) ذخیره شده است؟
+if (Array.isArray(book.content)) {
+  // مقادیر html_content را از هر آبجکت استخراج کرده و با خط جدید به هم می‌چسبانیم
+  finalHTML = book.content.map(page => page.html_content || '').join('\n');
+} else {
+  // اگر از قبل تبدیل به String شده بود
+  finalHTML = book.content || '';
+}
+
+content.innerHTML = finalHTML;
 
     // صبر برای layout کامل
     await waitForStableScrollWidth(content);
