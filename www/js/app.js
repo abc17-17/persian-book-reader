@@ -65,46 +65,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     Library.render();
   });
 
-  document.getElementById('btn-save-key').addEventListener('click', async () => {
+  document.getElementById('btn-save-key').addEventListener('click', () => {
     const key = document.getElementById('gemini-key-input').value.trim();
     const msg = document.getElementById('key-saved-msg');
 
-    // حالت اول: کاربر کادر را خالی کرده تا کلید قبلی پاک شود
-    if (!key) {
-      OCR.saveApiKey('');
-      msg.textContent = 'کلید پاک شد';
-      msg.style.color = 'inherit';
-      setTimeout(() => { msg.textContent = ''; }, 2000);
+    // بررسی صحت فرمت برای هر دو نوع کلید
+    const isValidAIza = key.startsWith('AIza') && key.length === 39;
+    const isValidAQ = key.startsWith('AQ.') && key.length >= 50; // برای پوشش کلیدهای ۵۳ کاراکتری
+
+    if (key && !(isValidAIza || isValidAQ)) {
+      msg.style.color = '#c46a5e';
+      msg.textContent = 'فرمت کلید اشتباه است. کلید باید با AIza (۳۹ کاراکتر) یا .AQ (حدود ۵۳ کاراکتر) شروع شود.';
+      setTimeout(() => { msg.textContent = ''; msg.style.color = ''; }, 3000);
       return;
     }
 
-    // حالت دوم: تست کلید جدید
-    msg.textContent = 'در حال بررسی اعتبار...';
-    msg.style.color = 'var(--text-dim)'; // همرنگ متن‌های کم‌رنگ اپلیکیشن
-
-    try {
-      // ارسال درخواست سبک به سرور گوگل
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
-
-      if (response.ok) {
-        // کلید معتبر بود (کد 200)
-        OCR.saveApiKey(key);
-        msg.textContent = 'کلید معتبر است و ذخیره شد ✓';
-        msg.style.color = '#4caf50'; // سبز
-      } else {
-        // کلید اشتباه یا منقضی شده بود
-        msg.textContent = '❌ کلید نامعتبر است';
-        msg.style.color = '#f44336'; // قرمز
-      }
-    } catch (error) {
-      // خطای اینترنت یا مسدود بودن دسترسی
-      msg.textContent = '❌ خطا در ارتباط با سرور';
-      msg.style.color = '#f44336';
-    }
-
-    // پاک کردن پیام بعد از ۳ ثانیه
-    setTimeout(() => { 
-      msg.textContent = ''; 
-      msg.style.color = 'inherit'; 
-    }, 3000);
-  });
+    OCR.saveApiKey(key);
+    msg.style.color = '';
+    msg.textContent = key ? 'ذخیره شد ✓' : 'کلید پاک شد';
+    setTimeout(() => { msg.textContent = ''; }, 2000);
+});
