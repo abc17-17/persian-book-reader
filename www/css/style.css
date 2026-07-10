@@ -87,7 +87,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* inner: column layout واقعی — آزاد است expand بشه */
 .reader-inner {
-  height: 100%;
+  height: calc(100vh - 96px);
   padding: 40px 24px 28px;
   box-sizing: border-box;
   column-width: calc(100vw - 48px);
