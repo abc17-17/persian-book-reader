@@ -1,0 +1,49 @@
+/* ===== فونت‌های محلی — بدون هیچ وابستگی به اینترنت =====
+   هر دو فونت زیر SIL Open Font License 1.1 هستند؛ متن مجوز کامل
+   کنار فایل‌های فونت در همین پوشه (fonts/OFL-*.txt) قرار داره. */
+
+/* Vazirmatn — github.com/rastikerdar/vazirmatn — نسخه v33.003 (همون نسخه‌ای که قبلاً از CDN میومد) */
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('../fonts/Vazirmatn-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('../fonts/Vazirmatn-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Noto Naskh Arabic — github.com/notofonts/arabic — یک فایل variable که
+   خودش وزن ۴۰۰ تا ۷۰۰ رو پوشش می‌ده (هم متن معمولی هم h1/h2 که 700 لازم دارن)،
+   به‌جای چند فایل جدا برای هر وزن. */
+@font-face {
+  font-family: 'Noto Naskh Arabic';
+  src: url('../fonts/NotoNaskhArabic-Variable.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Iran Sans — منتظر فایل‌ها هستیم. تا وقتی IranSans-Regular.woff2 و
+   IranSans-Bold.woff2 داخل www/fonts/ نباشن، این بلوک بی‌اثره و مرورگر
+   به‌صورت خودکار می‌ره سراغ Tahoma (fallback بعدی در reader.js). به محض
+   اضافه‌شدن فایل‌ها، بدون هیچ تغییر دیگه‌ای کار می‌کنه. */
+@font-face {
+  font-family: 'Iran Sans';
+  src: url('../fonts/IranSans-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Iran Sans';
+  src: url('../fonts/IranSans-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
