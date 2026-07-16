@@ -1,7 +1,7 @@
 const Auth = (() => {
   let accessToken = null;
   let googleAuthInitialized = false;
-  const WEB_CLIENT_ID = 'YOUR_WEB_CLIENT_ID_HERE.apps.googleusercontent.com';
+  const WEB_CLIENT_ID = '171444408122-3ov9197blrtdt2jpqma4lg0kp7r3chhh.apps.googleusercontent.com';
 
   function isNativePlatform() {
     return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
@@ -46,11 +46,10 @@ const Auth = (() => {
   }
 
   async function loginWeb() {
-    const CLIENT_ID = 'YOUR_WEB_CLIENT_ID_HERE.apps.googleusercontent.com';
     await loadGisScript();
     return new Promise((resolve, reject) => {
       const tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: CLIENT_ID,
+        client_id: WEB_CLIENT_ID,
         scope: 'https://www.googleapis.com/auth/drive.file email profile',
         callback: async (response) => {
           if (response.error) { reject(new Error(response.error)); return; }
