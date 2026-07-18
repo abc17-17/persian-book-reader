@@ -1,5 +1,9 @@
 const LocalStore = (() => {
-  const DB_NAME = 'book_reader_db', DB_VERSION = 1;
+  const DB_NAME = 'book_reader_db', DB_VERSION = 2;
+  // نکته: annotations store بعد از اینکه بعضی نصب‌ها احتمالاً از قبل روی نسخه‌ی ۱
+  // ساخته شده بودن به کد اضافه شد. IndexedDB فقط وقتی onupgradeneeded رو صدا می‌زنه
+  // که نسخه‌ی درخواستی از نسخه‌ی موجود بیشتر باشه — پس بدون این ارتقا، نصب‌های قدیمی‌تر
+  // هیچ‌وقت این store رو واقعاً نمی‌ساختن و ذخیره‌سازی annotation بی‌صدا شکست می‌خورد.
   let dbPromise = null;
 
   function openDb() {
