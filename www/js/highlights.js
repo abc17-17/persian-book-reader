@@ -2,8 +2,29 @@ const Highlights = (() => {
   let popupBound = false;
   let selectionWatcherBound = false;
   let debounceTimer = null;
+  const BLOCK_TAGS = /^(P|H1|H2|H3|ASIDE|DIV)$/;
 
   function generateId() { return 'ann_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9); }
+
+  // نزدیک‌ترین جد بلاکی (پاراگراف/تیتر/...) یه node — برای فهمیدن اینکه یه انتخاب
+  // داخل یه پاراگراف تنهاست یا چندتا رو قطع کرده.
+  function getBlockAncestor(node) {
+    let n = node;
+    while (n && n.nodeType !== 1) n = n.parentNode; // اگه text node بود، بریم رو parentElement
+    while (n && !BLOCK_TAGS.test(n.tagName || '')) n = n.parentNode;
+    return n || null;
+  }
+
+  // آیا انتخاب کامل داخل یه پاراگراف تنهاست؟ — چرا لازمه: کشیدن انتخاب از وسط یه
+  // پاراگراف به پاراگراف بعدی، تو این WebView با متن RTL، گاهی باعث می‌شه خودِ
+  // انتخابِ native به مرز اشتباهی بپره (مثلاً تا ابتدای صفحه). به‌جای تلاش برای حدس
+  // زدن/فیکس یه رفتار سطح‌پایینِ نامطمئن، این حالت رو تشخیص می‌دیم و هایلایت
+  // نمی‌سازیم، تا وقتی راه‌حل مطمئن‌تری پیدا بشه.
+  function isSingleParagraphSelection(range) {
+    const a = getBlockAncestor(range.startContainer);
+    const b = getBlockAncestor(range.endContainer);
+    return !!(a && b && a === b);
+  }
 
   // ===== تبدیل موقعیت DOM (node, offset) به آفستِ کاراکتری در متنِ خامِ کل root =====
   // چرا لازم است: با تغییر فونت/سایز، مختصات پیکسلی عوض می‌شه ولی خودِ متن عوض نمی‌شه.
@@ -58,6 +79,7 @@ const Highlights = (() => {
     if (!root.contains(range.commonAncestorContainer)) return null;
     const text = range.toString();
     if (!text.trim()) return null;
+    if (!isSingleParagraphSelection(range)) return null;
     const start = getPlainTextOffset(root, range.startContainer, range.startOffset);
     const end = getPlainTextOffset(root, range.endContainer, range.endOffset);
     if (end <= start) return null;
@@ -187,9 +209,14 @@ const Highlights = (() => {
 
     const popup = document.getElementById('highlight-popup');
     if (!popup) return;
+    const btn = document.getElementById('btn-create-highlight');
+    const hint = document.getElementById('highlight-popup-hint');
+    const singlePara = isSingleParagraphSelection(range);
+    if (btn) btn.style.display = singlePara ? '' : 'none';
+    if (hint) hint.style.display = singlePara ? 'none' : '';
 
     const rect = range.getBoundingClientRect();
-    const popupW = 90; // تقریبی، فقط برای جلوگیری از بیرون‌زدگی از لبه‌ی صفحه
+    const popupW = singlePara ? 90 : 150; // تقریبی، فقط برای جلوگیری از بیرون‌زدگی از لبه‌ی صفحه
     let left = rect.left + rect.width / 2 - popupW / 2;
     left = Math.max(8, Math.min(left, window.innerWidth - popupW - 8));
     popup.style.left = `${left}px`;
