@@ -166,7 +166,7 @@ const Highlights = (() => {
   // دلیلی محتوا جابه‌جا شده)، اون annotation رد می‌شه به‌جای هایلایتِ متن اشتباه —
   // همون اصلِ needsRepair که تو drive-sync برای کتاب‌های قدیمی استفاده شده.
   async function applyStoredHighlights(root, bookId) {
-    if (!root || !bookId || !window.LocalStore || !LocalStore.getAnnotationsForBook) return;
+    if (!root || !bookId || typeof LocalStore === 'undefined' || !LocalStore.getAnnotationsForBook) return;
     let list = [];
     try { list = await LocalStore.getAnnotationsForBook(bookId); } catch (e) { list = []; }
     if (!list || !list.length) return;
