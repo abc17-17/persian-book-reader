@@ -189,22 +189,19 @@ const Highlights = (() => {
     const popup = document.getElementById('highlight-popup');
     if (!popup) return;
     const btn = document.getElementById('btn-create-highlight');
-    const hint = document.getElementById('highlight-popup-hint');
+    
     if (btn) btn.style.display = '';
-    if (hint) hint.style.display = 'none';
 
     const rect = range.getBoundingClientRect();
-    const popupW = singlePara ? 90 : 150; // تقریبی، فقط برای جلوگیری از بیرون‌زدگی از لبه‌ی صفحه
+    
+    // چون پیام خطای طولانی را حذف کردیم، عرض پاپ‌آپ حالا فقط به اندازه دکمه «هایلایت» ثابت است
+    const popupW = 90; 
+    
     let left = rect.left + rect.width / 2 - popupW / 2;
     left = Math.max(8, Math.min(left, window.innerWidth - popupW - 8));
     popup.style.left = `${left}px`;
     popup.style.top = `${Math.max(8, rect.top - 46)}px`;
     popup.style.display = 'flex';
-  }
-
-  function hidePopup() {
-    const popup = document.getElementById('highlight-popup');
-    if (popup) popup.style.display = 'none';
   }
 
   // آیا الان یه انتخاب واقعی (غیرخالی) داخل root هست؟ — reader.js موقع تشخیص swipe
