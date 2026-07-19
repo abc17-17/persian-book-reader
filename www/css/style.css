@@ -122,14 +122,44 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   will-change: transform;
 }
 
-/* اجازه بده پاراگراف بین دو صفحه ادامه پیدا کنه (مثل کتاب واقعی/کیندل)،
-   ولی حداقل ۳ خط قبل و بعد از شکست بمونه تا یک خط تنها روی صفحه نمونه.
-   نکته: قبلاً اینجا break-inside:avoid بود که کل پاراگراف رو به صفحه بعد می‌فرستاد
-   اگه در باقی‌مانده‌ی صفحه جا نمی‌شد — همین باعث می‌شد بعضی صفحات نصفه خالی بمونن
-   و از بیرون به نظر برسه «تعداد خط هر صفحه نامرتبه». orphans/widows در Chromium
-   (پایه WebView اندروید) برای column از نسخه ۷۳ به بعد پشتیبانی می‌شه. */
+/* ===== Reader content ===== */
+/* wrapper: فقط پنجره نمایش — overflow hidden */
+.reader-content {
+  height: calc(100vh - 96px);
+  width: 100vw;
+  overflow: hidden;
+  position: relative;
+  direction: rtl;
+}
+
+/* inner: column layout واقعی — آزاد است expand بشه */
+.reader-inner {
+  height: 100%;
+  padding: 40px 24px 28px;
+  box-sizing: border-box;
+  column-width: calc(100vw - 48px);
+  column-gap: 48px;
+  column-fill: auto;
+  -webkit-column-fill: auto;
+  direction: rtl;
+  text-align: justify;
+  /* transform اینجا اعمال میشه */
+  will-change: transform;
+}
+
+/* حل مشکل پرش دستگیره انتخاب متن (Selection Jump) */
 .reader-content p {
-  margin-bottom: 1em;
+  /* حذف کامل فضاهای مرده‌ی خارجی */
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  
+  /* استفاده از فضای داخلی قابل لمس به جای margin */
+  padding-bottom: 1em;
+  
+  /* قفل کردن مختصات برای موتور مرورگر */
+  position: relative;
+  z-index: 1;
+
   orphans: 3;
   widows: 3;
 }
@@ -138,7 +168,14 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   font-size: 1.4em;
   font-weight: 700;
   text-align: center;
-  margin: 1em 0;
+  
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding-top: 1em;
+  padding-bottom: 1em;
+  
+  position: relative;
+  z-index: 1;
   break-before: column;
   -webkit-column-break-before: always;
 }
@@ -147,7 +184,14 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   font-size: 1.15em;
   font-weight: 700;
   text-align: center;
-  margin: 1em 0 0.8em;
+  
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding-top: 1em;
+  padding-bottom: 0.8em;
+  
+  position: relative;
+  z-index: 1;
   break-before: column;
   -webkit-column-break-before: always;
 }
@@ -156,8 +200,13 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   font-size: 0.85em;
   opacity: 0.7;
   border-top: 1px solid currentColor;
-  margin-top: 1.5em;
-  padding-top: 0.8em;
+  
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding-top: 2.3em; /* ترکیب 1.5em حاشیه قبلی با 0.8em پدینگ */
+  
+  position: relative;
+  z-index: 1;
   break-inside: avoid;
 }
 
