@@ -18,7 +18,9 @@ const Library = (() => {
       // آخرین سینک تغییر کرده (یا هر دو). تپ روش هرچی لازمه رو با هم انجام می‌ده.
       const needsBookUpload = !book.driveFileId;
       const anns = await LocalStore.getAnnotationsForBook(book.id);
-      const needsNotesSync = anns.length > 0 && (book.annotationsUpdatedAt || 0) > (book.annotationsSyncedAt || 0);
+      // نکته: سینکِ یادداشت به‌تنهایی معنی نداره وقتی خودِ کتاب هنوز رو Drive نیست —
+      // تو اون حالت یادداشت‌ها همراهِ آپلودِ خودِ کتاب می‌رن، نه به‌عنوان یه نیازِ جدا.
+      const needsNotesSync = !needsBookUpload && anns.length > 0 && (book.annotationsUpdatedAt || 0) > (book.annotationsSyncedAt || 0);
       const badge = (needsBookUpload || needsNotesSync)
         ? `<span class="drive-badge" title="سینک‌نشده — لمس کن">${ICON_UPLOAD}</span>`
         : '';
@@ -73,15 +75,38 @@ const Library = (() => {
   async function syncOneBookCombined(book, badgeEl) {
     if (!(await Auth.isLoggedIn())) { alert('برای سینک با Drive باید وارد حساب گوگل باشید.'); return; }
 
+    // خودحفاظتی: قبل از فرضِ «نیاز به آپلود»، چک کن شاید این کتاب از قبل رو Drive
+    // باشه ولی لینکِ محلی‌ش گم شده (مثلاً از یه دانلود/سینکِ ناقصِ قدیمی‌تر) — دقیقاً
+    // همون چیزی که needsRepair تو سینکِ کلی چک می‌کنه، اینجا هم برای تپِ تکی.
+    if (!book.driveFileId) {
+      try {
+        const remoteBooks = await DriveSync.listRemoteBooks();
+        const match = remoteBooks.find(f => f.bookId === book.id);
+        if (match) {
+          book.driveFileId = match.driveFileId;
+          book.driveSyncedAt = Date.now();
+          await LocalStore.saveBook(book);
+        }
+      } catch (e) { /* چک نشد، با فرضِ نیاز به آپلود ادامه بده */ }
+    }
+
     const needsBookUpload = !book.driveFileId;
     const anns = await LocalStore.getAnnotationsForBook(book.id);
-    const needsNotesUpload = anns.length > 0 && (book.annotationsUpdatedAt || 0) > (book.annotationsSyncedAt || 0);
-    if (!needsBookUpload && !needsNotesUpload) return; // وضعیت از قبلِ این تپ عوض شده، کاری نیست
+    // سینکِ یادداشت به‌تنهایی معنی نداره وقتی خودِ کتاب هنوز رو Drive نیست — تو اون
+    // حالت یادداشت‌ها همراهِ آپلودِ خودِ کتاب می‌رن، نه به‌عنوان یه نیازِ مستقل.
+    const needsNotesSync = !needsBookUpload && anns.length > 0 && (book.annotationsUpdatedAt || 0) > (book.annotationsSyncedAt || 0);
+    const shouldUploadNotesNow = needsBookUpload ? anns.length > 0 : needsNotesSync;
+
+    if (!needsBookUpload && !needsNotesSync) { badgeEl.remove(); return; } // ترمیم شد و چیزِ دیگه‌ای هم لازم نبود
 
     let message;
-    if (needsBookUpload && needsNotesUpload) message = `«${book.title}» و یادداشت‌هاش تو Google Drive بکاپ بشن؟`;
-    else if (needsBookUpload) message = `«${book.title}» تو Google Drive پشتیبان‌گیری بشه؟`;
-    else message = `هایلایت/یادداشت‌های «${book.title}» تو Google Drive بکاپ بشه؟`;
+    if (needsBookUpload) {
+      message = anns.length > 0
+        ? `«${book.title}» و یادداشت‌هاش تو Google Drive پشتیبان‌گیری بشه؟`
+        : `«${book.title}» تو Google Drive پشتیبان‌گیری بشه؟`;
+    } else {
+      message = `هایلایت/یادداشت‌های «${book.title}» تو Google Drive بکاپ بشه؟`;
+    }
     if (!confirm(message)) return;
 
     const statusEl = document.getElementById('sync-status');
@@ -92,7 +117,7 @@ const Library = (() => {
         statusEl.textContent = `در حال آپلود: ${book.title}`;
         await DriveSync.uploadBook(book);
       }
-      if (needsNotesUpload) {
+      if (shouldUploadNotesNow) {
         statusEl.textContent = `در حال بکاپِ یادداشت‌ها: ${book.title}`;
         await DriveSync.uploadAnnotations(book.id, book.title, anns);
         book.annotationsSyncedAt = Date.now();
