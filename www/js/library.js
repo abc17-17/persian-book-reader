@@ -1,7 +1,10 @@
 const Library = (() => {
-  // آیکونِ ساده و اورجینال (نه از یه آیکون‌فونت خاص) برای نشونِ واحدِ سینکِ کارت کتاب.
+  // آیکونِ ساده و اورجینال برای نشونِ واحدِ سینکِ کارت کتاب.
   // گروهِ arrow-up جدا شده تا فقط خودِ فلش (نه کل ابر) تو حالتِ idle پمپاژ کنه.
   const ICON_UPLOAD = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 17a4.5 4.5 0 0 1-.4-8.98A5.5 5.5 0 0 1 17.5 9.5a4 4 0 0 1-.5 7.98"/><g class="arrow-up"><path d="M12 11v7"/><path d="M9 14l3-3 3 3"/></g></svg>';
+  
+  // آیکون چرخش برای زمان سینک دیتای یادداشت‌ها و هایلایت‌ها
+  const ICON_SYNC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>';
 
   async function render() {
     const books = await LocalStore.getAllBooks();
@@ -14,16 +17,17 @@ const Library = (() => {
       const card = document.createElement('div');
       card.className = 'book-card';
 
-      // یه بَجِ واحد برای هر دو حالت: کتاب هنوز آپلود نشده، یا یادداشت/هایلایتش از
-      // آخرین سینک تغییر کرده (یا هر دو). تپ روش هرچی لازمه رو با هم انجام می‌ده.
+      // بررسی وضعیت جهت نمایش آیکون مناسب با اولویت آپلود فایل
       const needsBookUpload = !book.driveFileId;
       const anns = await LocalStore.getAnnotationsForBook(book.id);
-      // نکته: سینکِ یادداشت به‌تنهایی معنی نداره وقتی خودِ کتاب هنوز رو Drive نیست —
-      // تو اون حالت یادداشت‌ها همراهِ آپلودِ خودِ کتاب می‌رن، نه به‌عنوان یه نیازِ جدا.
       const needsNotesSync = !needsBookUpload && anns.length > 0 && (book.annotationsUpdatedAt || 0) > (book.annotationsSyncedAt || 0);
-      const badge = (needsBookUpload || needsNotesSync)
-        ? `<span class="drive-badge" title="سینک‌نشده — لمس کن">${ICON_UPLOAD}</span>`
-        : '';
+      
+      let badge = '';
+      if (needsBookUpload) {
+        badge = `<span class="drive-badge" title="آپلود فایل کتاب روی درایو — لمس کن">${ICON_UPLOAD}</span>`;
+      } else if (needsNotesSync) {
+        badge = `<span class="drive-badge" title="سینک یادداشت‌ها و هایلایت‌ها — لمس کن">${ICON_SYNC}</span>`;
+      }
 
       card.innerHTML = `
         <div class="book-cover">
@@ -70,14 +74,11 @@ const Library = (() => {
   }
 
   // ===== بکاپ گرفتن از یک کتاب مشخص، جدا از سینک دسته‌جمعی =====
-  // ===== سینکِ ترکیبی یک کتابِ خاص — با لمسِ بَجِ واحد رو همون کارت: هرچی از این
-  // کتاب لازمه (خودِ محتوا، یادداشت‌ها، یا هر دو) رو با یه تأییدِ واحد انجام می‌ده. =====
+  // ===== سینکِ ترکیبی یک کتابِ خاص — با لمسِ بَجِ واحد رو همون کارت =====
   async function syncOneBookCombined(book, badgeEl) {
     if (!(await Auth.isLoggedIn())) { alert('برای سینک با Drive باید وارد حساب گوگل باشید.'); return; }
 
-    // خودحفاظتی: قبل از فرضِ «نیاز به آپلود»، چک کن شاید این کتاب از قبل رو Drive
-    // باشه ولی لینکِ محلی‌ش گم شده (مثلاً از یه دانلود/سینکِ ناقصِ قدیمی‌تر) — دقیقاً
-    // همون چیزی که needsRepair تو سینکِ کلی چک می‌کنه، اینجا هم برای تپِ تکی.
+    // خودحفاظتی: قبل از فرضِ «نیاز به آپلود»، چک کن شاید این کتاب از قبل رو Drive باشه
     if (!book.driveFileId) {
       try {
         const remoteBooks = await DriveSync.listRemoteBooks();
@@ -92,12 +93,10 @@ const Library = (() => {
 
     const needsBookUpload = !book.driveFileId;
     const anns = await LocalStore.getAnnotationsForBook(book.id);
-    // سینکِ یادداشت به‌تنهایی معنی نداره وقتی خودِ کتاب هنوز رو Drive نیست — تو اون
-    // حالت یادداشت‌ها همراهِ آپلودِ خودِ کتاب می‌رن، نه به‌عنوان یه نیازِ مستقل.
     const needsNotesSync = !needsBookUpload && anns.length > 0 && (book.annotationsUpdatedAt || 0) > (book.annotationsSyncedAt || 0);
     const shouldUploadNotesNow = needsBookUpload ? anns.length > 0 : needsNotesSync;
 
-    if (!needsBookUpload && !needsNotesSync) { badgeEl.remove(); return; } // ترمیم شد و چیزِ دیگه‌ای هم لازم نبود
+    if (!needsBookUpload && !needsNotesSync) { badgeEl.remove(); return; } 
 
     let message;
     if (needsBookUpload) {
@@ -110,7 +109,7 @@ const Library = (() => {
     if (!confirm(message)) return;
 
     const statusEl = document.getElementById('sync-status');
-    badgeEl.classList.add('processing'); // چرخشِ سریع به‌جای تنفسِ آرومِ idle
+    badgeEl.classList.add('processing'); // فعال‌سازی انیمیشن چرخش سریع
     statusEl.style.display = 'block';
     try {
       if (needsBookUpload) {
@@ -128,12 +127,12 @@ const Library = (() => {
       setTimeout(() => { statusEl.style.display = 'none'; }, 1500);
     } catch (err) {
       statusEl.style.display = 'none';
-      badgeEl.classList.remove('processing'); // برگرد به idle، بَج بمونه تا دوباره امتحان کنه
+      badgeEl.classList.remove('processing'); // برگشت به idle
       alert(`بکاپِ «${book.title}» ناموفق بود: ` + err.message);
     }
   }
 
-  // ===== بررسی وضعیت سینک با Drive و اجرا فقط با تأیید کاربر (هم آپلود هم دانلود) =====
+  // ===== بررسی وضعیت سینک با Drive و اجرا فقط با تأیید کاربر =====
   async function checkAndSync() {
     const statusEl = document.getElementById('sync-status');
     if (!(await Auth.isLoggedIn())) { alert('برای سینک با Drive باید وارد حساب گوگل باشید.'); return; }
@@ -143,8 +142,6 @@ const Library = (() => {
     try {
       const { needsUpload, needsDownload, needsRepair } = await DriveSync.checkSyncStatus();
 
-      // کتاب‌هایی که annotation محلی دارن — همین‌جا، زودتر از چکِ «کاری نیست»، چون
-      // ممکنه هیچ کتابی نیاز به آپلود/دانلود نداشته باشه ولی یادداشتِ تازه باشه.
       const allBooks = await LocalStore.getAllBooks();
       const withAnnotations = [];
       for (const b of allBooks) {
@@ -152,8 +149,6 @@ const Library = (() => {
         if (anns.length > 0) withAnnotations.push({ book: b, annotations: anns });
       }
 
-      // ترمیم خاموش: کتاب‌هایی که با نسخه‌ی قدیمی‌تر دانلود شده بودن و لینک محلی‌شون گم بود.
-      // هیچ آپلود/دانلود جدیدی لازم نیست، فقط driveFileId محلی رو به فایل موجود وصل می‌کنیم.
       if (needsRepair.length > 0) {
         statusEl.textContent = 'در حال تصحیح اطلاعات محلی...';
         for (const { book, remote } of needsRepair) {
@@ -200,8 +195,6 @@ const Library = (() => {
         showDownloadPicker(needsDownload);
       }
 
-      // ===== یادداشت‌ها/هایلایت‌ها — همیشه آخرین نسخه‌ی هر کتابی که annotation محلی
-      // داره رو آپلود می‌کنیم (فایل کوچیکه، نیازی به ردیابیِ دقیقِ «چی عوض شده» نیست) =====
       if (withAnnotations.length > 0) {
         const okNotes = confirm(`هایلایت/یادداشت‌های ${withAnnotations.length} کتاب رو Drive بکاپ بشه؟`);
         if (okNotes) {
@@ -229,7 +222,6 @@ const Library = (() => {
     }
   }
 
-  // ===== پیکر دانلود: نمایش هر کتاب موجود در Drive با حجمش، امکان دانلود تک‌تک یا همه =====
   function formatBytes(bytes) {
     if (bytes === null || bytes === undefined) return 'حجم نامشخص';
     if (bytes < 1024) return bytes + ' بایت';
@@ -287,15 +279,16 @@ const Library = (() => {
     try {
       const book = await DriveSync.downloadBook(remoteBookInfo.driveFileId);
       await LocalStore.saveBook(book);
-      // اگه یادداشت/هایلایتی هم رو Drive برای همین کتاب باشه، همینجا برش‌گردون —
-      // best-effort: اگه این بخش شکست بخوره، خودِ کتاب که دانلود شده مهم‌تره، پس
-      // بی‌صدا رد می‌شیم، نه اینکه کل دانلود رو fail کنیم.
       try {
         const annFiles = await DriveSync.listRemoteAnnotationFiles();
         const match = annFiles.find(f => f.bookId === book.id);
         if (match) {
           const annotations = await DriveSync.downloadAnnotations(match.driveFileId);
           for (const ann of annotations) await LocalStore.saveAnnotation(ann);
+          
+          // به‌روزرسانی مهر زمانی سینک یادداشت‌ها بعد از دانلود موفق
+          book.annotationsSyncedAt = Date.now();
+          await LocalStore.saveBook(book);
         }
       } catch (annErr) { /* یادداشت‌ها برنگشت، مهم نیست؛ خودِ کتاب سرجاشه */ }
       rowEl.remove();
@@ -310,7 +303,6 @@ const Library = (() => {
     }
   }
 
-  // ===== منوی long-press روی کارت کتاب — قابل گسترش برای موارد بعدی =====
   function showBookMenu(book) {
     closeAllPanels();
 
@@ -335,7 +327,6 @@ const Library = (() => {
     panel.classList.add('visible');
   }
 
-  // ===== پنل جزئیات — همه چیز از روی داده‌ی موجود محاسبه می‌شه، چیز جدیدی ذخیره نمی‌کنیم =====
   function showBookDetails(book) {
     closeAllPanels();
 
@@ -344,8 +335,6 @@ const Library = (() => {
     const driveInfo = book.driveFileId
       ? 'بله' + (book.driveSyncedAt ? ' — ' + new Date(book.driveSyncedAt).toLocaleDateString('fa-IR') : '')
       : 'خیر';
-    // اگه مترجمی پیدا نشده، اصلاً ردیفش رو نشون نمی‌دیم — نبودنش می‌تونه یعنی کتاب اصلاً
-    // ترجمه نیست (نه این‌که «نامشخص»ه)، پس چیزی رو که مطمئن نیستیم ادعا نمی‌کنیم.
     const translatorRow = book.translator
       ? `<div class="details-row"><span class="details-label">مترجم</span><span class="details-value">${esc(book.translator)}</span></div>`
       : '';
@@ -373,7 +362,6 @@ const Library = (() => {
     panel.classList.add('visible');
   }
 
-  // ===== حذف — فقط محلی. هیچ درخواستی به Drive نمی‌فرستیم، فایل اونجا دست‌نخورده می‌مونه =====
   async function confirmDeleteBook(book) {
     const driveNote = book.driveFileId
       ? '\n(نسخه‌ی Drive دست‌نخورده می‌مونه — فقط از این گوشی حذف می‌شه.)'
