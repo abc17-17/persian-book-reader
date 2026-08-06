@@ -384,12 +384,38 @@ const Highlights = (() => {
     if (!popup) return;
 
     const rect = range.getBoundingClientRect();
-    const popupW = 180; // تقریبی برای گرید ۸تاییِ رنگ (که حالا می‌شکنه به ۲ ردیف)، فقط برای جلوگیری از بیرون‌زدگی از لبه‌ی صفحه
+
+    // باگ قبلی: آفست ثابتِ ۴۶ پیکسل برای یک پاپ‌آپِ کوتاه (یک ردیف) حساب شده بود.
+    // از وقتی گرید ۸تاییِ رنگ به ۲ ردیف می‌شکنه، ارتفاع واقعیِ پاپ‌آپ ~۸۰ پیکسله،
+    // یعنی با آفست ۴۶، لبه‌ی پایینِ پاپ‌آپ حدود ۳۴ پیکسل از لبه‌ی بالای انتخاب رد
+    // می‌شه — دقیقاً همون‌جایی که منوی native اندروید (Copy/Share/Select all) هم
+    // می‌شینه. چون UI نیتیو بیرون از WebView و همیشه بالای همه‌چیز رندر می‌شه،
+    // z-index هیچ کمکی نمی‌کنه؛ تنها راه اینه که فضای پاپ‌آپ خودمون رو کامل بالاتر
+    // از اون منطقه ببریم. اینجا اول با visibility:hidden نمایشش می‌دیم تا ابعاد
+    // واقعی‌ش (نه یه عدد حدسی) رو اندازه بگیریم، بعد جاش رو بر همون مبنا حساب می‌کنیم.
+    popup.style.visibility = 'hidden';
+    popup.style.display = 'flex';
+    const popupRect = popup.getBoundingClientRect();
+    const popupW = popupRect.width || 160;
+    const popupH = popupRect.height || 80;
+
+    // ارتفاعِ منوی native اندروید از وب قابل‌خوندن نیست (هیچ API ای بهش دسترسی نمی‌ده)،
+    // پس یه فاصله‌ی اطمینانِ تجربی رو روی ارتفاع خودِ پاپ‌آپ اضافه می‌کنیم. این عدد را
+    // بعد از تست روی گوشی واقعی، اگه هنوز کمی همپوشانی دیدی، می‌تونی بزرگ‌ترش کنی.
+    const NATIVE_TOOLBAR_CLEARANCE = 56;
+
     let left = rect.left + rect.width / 2 - popupW / 2;
     left = Math.max(8, Math.min(left, window.innerWidth - popupW - 8));
+
+    let top = rect.top - popupH - NATIVE_TOOLBAR_CLEARANCE;
+    // اگه انتخاب خیلی نزدیک لبه‌ی بالای صفحه باشه و جا برای بالا رفتن نباشه، به‌جای
+    // بیرون‌زدگی از صفحه، پایینِ انتخاب نشونش بده — اونجا با منوی native (که همیشه
+    // بالای انتخاب می‌شینه) برخوردی نداره.
+    if (top < 8) top = rect.bottom + 12;
+
     popup.style.left = `${left}px`;
-    popup.style.top = `${Math.max(8, rect.top - 46)}px`;
-    popup.style.display = 'flex';
+    popup.style.top = `${top}px`;
+    popup.style.visibility = 'visible';
   }
 
   function hidePopup() {
