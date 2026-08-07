@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: دریافت کد از مخزن
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: نصب Node.js
         uses: actions/setup-node@v4
